@@ -1,0 +1,31 @@
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: cohort_insights
+      REDIS_URL: redis://redis:6379/0
+      ACTIVE_LIMIT: 3
+    depends_on:
+      mongo: { condition: service_healthy }
+      redis: { condition: service_healthy }
+  mongo:
+    image: mongo:7
+    ports: ["27017:27017"]
+    volumes: [mongo_data:/data/db]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+volumes:
+  mongo_data:
